@@ -1,11 +1,31 @@
-ARG ARCH_IMG
-FROM ${ARCH_IMG}
+FROM phasecorex/red-discordbot
 
-RUN set -eux; \
-    mkdir -p /usr/share/man/man1/; \
+RUN set -ex; \
+# Install build dependencies
+    buildDeps=' \
+        build-essential \
+        wget \
+    '; \
     apt-get update; \
+    apt-get install -y --no-install-recommends $buildDeps; \
+# Install popular cog dependencies (python)
     apt-get install -y --no-install-recommends \
-# Redbot dependencies
-        default-jre-headless \
+    # wand
+        libmagickwand-dev \
+    # python-aalib
+        libaa1-dev \
+# Install popular cog dependencies (programs)
+        ffmpeg \
     ; \
-    rm -rf /var/lib/apt/lists/*;
+# Build ImageMagick 7
+    wget ftp://ftp.imagemagick.org/pub/ImageMagick/ImageMagick.tar.gz; \
+    tar xvfz ImageMagick.tar.gz; \
+    cd ImageMagick-*; \
+    ./configure --disable-shared; \
+    make; \
+    make install; \
+    cd ..; \
+    rm -rf ImageMagick*; \
+# Clean up
+    apt-get purge -y --auto-remove $buildDeps; \
+    rm -rf /var/lib/apt/lists/*
